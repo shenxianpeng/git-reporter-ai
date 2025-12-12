@@ -2,6 +2,7 @@
 
 import asyncio
 import sys
+import traceback
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -261,8 +262,6 @@ Generated: {report.generated_at.strftime('%Y-%m-%d %H:%M:%S')}
         sys.exit(1)
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
-        import traceback
-
         traceback.print_exc()
         sys.exit(1)
 

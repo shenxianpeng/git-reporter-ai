@@ -116,7 +116,8 @@ class ReportGenerator:
                 all_commits.extend(commits)
             except Exception as e:
                 # Log error but continue with other repos
-                print(f"Warning: Error analyzing {repo_config.name}: {e}")
+                import sys
+                print(f"Warning: Error analyzing {repo_config.name}: {e}", file=sys.stderr)
 
         # Sort all commits by date
         all_commits.sort(key=lambda c: c.date, reverse=True)

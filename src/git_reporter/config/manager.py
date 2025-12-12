@@ -55,7 +55,7 @@ class ConfigManager:
         try:
             return Config(**data)
         except ValidationError as e:
-            raise ValidationError(f"Invalid configuration: {e}") from e
+            raise ValueError(f"Invalid configuration: {e}") from e
 
     def save(self, config: Config) -> None:
         """Save configuration to file.
