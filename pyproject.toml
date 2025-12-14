@@ -3,7 +3,7 @@ requires = ["uv_build>=0.8.0"]
 build-backend = "uv_build"
 
 [project]
-name = "git-reporter"
+name = "git-reporter-ai"
 version = "0.1.0"
 description = "AI-Powered Git commit history analyzer and report generator"
 readme = "README.md"
@@ -55,8 +55,8 @@ Repository = "https://github.com/shenxianpeng/git-reporter"
 Issues = "https://github.com/shenxianpeng/git-reporter/issues"
 
 [project.scripts]
-git-reporter = "git_reporter.cli:main"
+git-reporter = "git_reporter_ai.cli:main"
 
-[project.entry-points."git_reporter.ai_providers"]
-openai = "git_reporter.ai.openai_provider:OpenAIProvider"
-gemini = "git_reporter.ai.gemini_provider:GeminiProvider"
+[project.entry-points."git_reporter_ai.ai_providers"]
+openai = "git_reporter_ai.ai.openai_provider:OpenAIProvider"
+gemini = "git_reporter_ai.ai.gemini_provider:GeminiProvider"
