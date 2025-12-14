@@ -1,0 +1,16 @@
+ai_provider: openai
+default_period: weekly
+openai_model: gpt-4o-mini
+repos:
+  - name: cpp-linter-action
+    repo: https://github.com/cpp-linter/cpp-linter-action.git
+    author_email: xianpeng.shen@gmail.com
+  - name: cpp-linter-hooks
+    repo: https://github.com/cpp-linter/cpp-linter-hooks.git
+    author_email: xianpeng.shen@gmail.com
+  - name: commit-check
+    repo: https://github.com/commit-check/commit-check.git
+    author_email: xianpeng.shen@gmail.com
+  - name: gitstats
+    repo: https://github.com/shenxianpeng/gitstats.git
+    author_email: xianpeng.shen@gmail.com

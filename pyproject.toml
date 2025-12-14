@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "AI-Powered Git commit history analyzer and report generator"
 readme = "README.md"
 authors = [
-    { name = "copilot-swe-agent[bot]", email = "198982749+Copilot@users.noreply.github.com" }
+    { name = "Xianpeng Shen", email = "xianpeng.shen@gmail.com" }
 ]
 requires-python = ">=3.12"
 dependencies = [
@@ -35,9 +35,15 @@ dev = [
     "pytest-cov>=6.0.0",
     "ruff>=0.8.0",
 ]
+docs = [
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.0",
+    "mkdocs-git-revision-date-localized-plugin>=1.2.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/shenxianpeng/git-reporter"
+Documentation = "https://shenxianpeng.github.io/git-reporter/"
 Repository = "https://github.com/shenxianpeng/git-reporter"
 Issues = "https://github.com/shenxianpeng/git-reporter/issues"
 

@@ -1,4 +1,8 @@
-# Example configuration file for git-reporter
+# Example Configuration
+
+Complete example configuration file for git-reporter.
+
+```yaml
 # You can use this in multiple ways:
 # 1. Copy to ~/.git-reporter/config.yaml (global config)
 # 2. Save as git-reporter.yaml in your project directory (local config)
@@ -52,3 +56,5 @@ repos:
 # Set them as environment variables instead:
 #   export OPENAI_API_KEY='your-openai-api-key'
 #   export GEMINI_API_KEY='your-gemini-api-key'
+
+\`\`\`

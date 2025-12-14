@@ -43,17 +43,33 @@ class RepositoryConfig(BaseModel):
     """Configuration for a single repository."""
 
     name: str = Field(..., description="Repository name")
-    path: str = Field(..., description="Local path to repository")
+    path: Optional[str] = Field(None, description="Local path to repository")
+    repo: Optional[str] = Field(None, description="Remote repository URL")
     author_email: Optional[str] = Field(
         None, description="Filter commits by author email"
     )
+
+    def get_repo_location(self) -> str:
+        """Get the repository location (either local path or remote URL)."""
+        if self.path:
+            return self.path
+        elif self.repo:
+            return self.repo
+        else:
+            raise ValueError(
+                f"Repository '{self.name}' must have either 'path' or 'repo' specified"
+            )
 
 
 class Config(BaseModel):
     """Main configuration for git-reporter."""
 
-    repositories: list[RepositoryConfig] = Field(
-        default_factory=list, description="List of repositories to analyze"
+    model_config = {"populate_by_name": True}  # Allow both field name and alias
+
+    repos: list[RepositoryConfig] = Field(
+        default_factory=list,
+        description="List of repositories to analyze",
+        alias="repositories",  # Support both 'repos' and 'repositories' for backwards compatibility
     )
     ai_provider: AIProvider = Field(
         default=AIProvider.OPENAI, description="AI provider to use"
@@ -73,7 +89,9 @@ class ReportRequest(BaseModel):
     """Request for generating a report."""
 
     period: ReportPeriod = Field(..., description="Report time period")
-    start_date: Optional[datetime] = Field(None, description="Start date for custom period")
+    start_date: Optional[datetime] = Field(
+        None, description="Start date for custom period"
+    )
     end_date: Optional[datetime] = Field(None, description="End date for custom period")
     repositories: Optional[list[str]] = Field(
         None, description="Specific repositories to include (None = all)"

@@ -14,6 +14,12 @@ class ConfigManager:
     """Manages configuration loading and saving."""
 
     DEFAULT_CONFIG_PATH = Path.home() / ".git-reporter" / "config.yaml"
+    LOCAL_CONFIG_NAMES = [
+        "git-reporter.yaml",
+        "git-reporter.yml",
+        ".git-reporter.yaml",
+        ".git-reporter.yml",
+    ]
 
     def __init__(self, config_path: Optional[Path] = None):
         """Initialize the configuration manager.
@@ -21,7 +27,18 @@ class ConfigManager:
         Args:
             config_path: Path to configuration file (uses default if None)
         """
-        self.config_path = config_path or self.DEFAULT_CONFIG_PATH
+        if config_path:
+            self.config_path = config_path
+        else:
+            # Check for local config files first
+            for config_name in self.LOCAL_CONFIG_NAMES:
+                local_config = Path.cwd() / config_name
+                if local_config.exists():
+                    self.config_path = local_config
+                    break
+            else:
+                # Fall back to default config path
+                self.config_path = self.DEFAULT_CONFIG_PATH
 
     def load(self) -> Config:
         """Load configuration from file.
@@ -67,7 +84,7 @@ class ConfigManager:
         self.config_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Convert to dict and remove None values and API keys (store in env instead)
-        data = config.model_dump(exclude_none=True, mode="python")
+        data = config.model_dump(exclude_none=True, mode="python", by_alias=True)
 
         # Don't save API keys to file for security
         if "openai_api_key" in data:
@@ -77,9 +94,17 @@ class ConfigManager:
 
         # Convert enum to string value
         if "ai_provider" in data:
-            data["ai_provider"] = data["ai_provider"].value if hasattr(data["ai_provider"], "value") else data["ai_provider"]
+            data["ai_provider"] = (
+                data["ai_provider"].value
+                if hasattr(data["ai_provider"], "value")
+                else data["ai_provider"]
+            )
         if "default_period" in data:
-            data["default_period"] = data["default_period"].value if hasattr(data["default_period"], "value") else data["default_period"]
+            data["default_period"] = (
+                data["default_period"].value
+                if hasattr(data["default_period"], "value")
+                else data["default_period"]
+            )
 
         with open(self.config_path, "w") as f:
             yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)

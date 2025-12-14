@@ -1,5 +1,6 @@
 """Google Gemini provider implementation."""
 
+import os
 from typing import Optional
 
 from pydantic_ai import Agent
@@ -21,6 +22,8 @@ class GeminiProvider(BaseAIProvider):
         """
         self.api_key = api_key
         self.model = model
+        # Set API key in environment for pydantic-ai
+        os.environ["GEMINI_API_KEY"] = api_key
 
     async def generate_report(
         self,
@@ -42,9 +45,10 @@ class GeminiProvider(BaseAIProvider):
             return "No commits found in this period."
 
         # Create pydantic-ai agent with Gemini model
-        model = GeminiModel(self.model, api_key=self.api_key)
+        # pydantic-ai reads GEMINI_API_KEY from environment
+        model = GeminiModel(self.model)
         agent = Agent(
-            model=model,
+            model,
             system_prompt=self._create_system_prompt(period),
         )
 
@@ -67,4 +71,5 @@ class GeminiProvider(BaseAIProvider):
         # Run the agent
         result = await agent.run(user_prompt)
 
-        return result.data
+        # pydantic-ai AgentRunResult has the output in the 'output' attribute
+        return result.output

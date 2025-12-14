@@ -50,7 +50,7 @@ def init(config: Optional[Path]):
                 return
 
         # Create default configuration
-        config_obj = config_manager.create_default()
+        config_manager.create_default()
 
         console.print(
             f"[green]✓[/green] Created configuration file at: {config_manager.config_path}"
@@ -76,32 +76,62 @@ def init(config: Optional[Path]):
     help="Path to configuration file",
 )
 @click.option("--name", "-n", required=True, help="Repository name")
-@click.option("--path", "-p", required=True, help="Local path to repository")
+@click.option("--path", "-p", help="Local path to repository")
+@click.option("--repo", "-r", help="Remote repository URL")
 @click.option("--email", "-e", help="Filter commits by author email")
-def add_repo(config: Optional[Path], name: str, path: str, email: Optional[str]):
-    """Add a repository to the configuration."""
+def add_repo(
+    config: Optional[Path],
+    name: str,
+    path: Optional[str],
+    repo: Optional[str],
+    email: Optional[str],
+):
+    """Add a repository to the configuration.
+
+    Specify either --path for a local repository or --repo for a remote repository.
+    """
     try:
+        # Validate that either path or repo is provided
+        if not path and not repo:
+            console.print(
+                "[red]Error:[/red] Either --path or --repo must be specified."
+            )
+            sys.exit(1)
+
+        if path and repo:
+            console.print(
+                "[red]Error:[/red] Cannot specify both --path and --repo. Use one or the other."
+            )
+            sys.exit(1)
+
         config_manager = ConfigManager(config)
         config_obj = config_manager.load()
 
         # Check if repository already exists
-        if any(r.name == name for r in config_obj.repositories):
-            console.print(f"[yellow]Warning:[/yellow] Repository '{name}' already exists.")
+        if any(r.name == name for r in config_obj.repos):
+            console.print(
+                f"[yellow]Warning:[/yellow] Repository '{name}' already exists."
+            )
             if not click.confirm("Overwrite?"):
                 console.print("[yellow]Cancelled.[/yellow]")
                 return
 
             # Remove existing
-            config_obj.repositories = [
-                r for r in config_obj.repositories if r.name != name
-            ]
+            config_obj.repos = [r for r in config_obj.repos if r.name != name]
 
         # Add new repository
-        repo_config = RepositoryConfig(name=name, path=path, author_email=email)
-        config_obj.repositories.append(repo_config)
+        repo_config = RepositoryConfig(
+            name=name, path=path, repo=repo, author_email=email
+        )
+        config_obj.repos.append(repo_config)
 
         config_manager.save(config_obj)
-        console.print(f"[green]✓[/green] Added repository: {name}")
+
+        location_type = "local path" if path else "remote URL"
+        location_value = path if path else repo
+        console.print(
+            f"[green]✓[/green] Added repository: {name} ({location_type}: {location_value})"
+        )
 
     except FileNotFoundError as e:
         console.print(f"[red]Error:[/red] {e}")
@@ -125,18 +155,21 @@ def list_repos(config: Optional[Path]):
         config_manager = ConfigManager(config)
         config_obj = config_manager.load()
 
-        if not config_obj.repositories:
+        if not config_obj.repos:
             console.print("[yellow]No repositories configured.[/yellow]")
             console.print("Run 'git-reporter add-repo' to add repositories.")
             return
 
         table = Table(title="Configured Repositories")
         table.add_column("Name", style="cyan")
-        table.add_column("Path", style="green")
+        table.add_column("Type", style="magenta")
+        table.add_column("Location", style="green")
         table.add_column("Author Email", style="yellow")
 
-        for repo in config_obj.repositories:
-            table.add_row(repo.name, repo.path, repo.author_email or "")
+        for repo in config_obj.repos:
+            repo_type = "Local" if repo.path else "Remote"
+            location = repo.path if repo.path else repo.repo
+            table.add_row(repo.name, repo_type, location, repo.author_email or "")
 
         console.print(table)
 
@@ -165,7 +198,9 @@ def list_repos(config: Optional[Path]):
 @click.option("--start", "-s", help="Start date for custom period (YYYY-MM-DD)")
 @click.option("--end", "-e", help="End date for custom period (YYYY-MM-DD)")
 @click.option("--repo", "-r", multiple=True, help="Specific repositories to include")
-@click.option("--output", "-o", type=click.Path(path_type=Path), help="Output file path")
+@click.option(
+    "--output", "-o", type=click.Path(path_type=Path), help="Output file path"
+)
 @click.option(
     "--provider",
     type=click.Choice(["openai", "gemini"]),
@@ -240,9 +275,9 @@ def generate(
         if output:
             output_text = f"""# {request.period.value.upper()} Report
 
-Period: {report.start_date.strftime('%Y-%m-%d')} to {report.end_date.strftime('%Y-%m-%d')}
+Period: {report.start_date.strftime("%Y-%m-%d")} to {report.end_date.strftime("%Y-%m-%d")}
 Commits: {len(report.commits)}
-Generated: {report.generated_at.strftime('%Y-%m-%d %H:%M:%S')}
+Generated: {report.generated_at.strftime("%Y-%m-%d %H:%M:%S")}
 
 ## Summary
 

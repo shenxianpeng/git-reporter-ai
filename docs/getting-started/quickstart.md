@@ -18,12 +18,29 @@ git-reporter init
 
 This creates `~/.git-reporter/config.yaml`
 
+**Or** create a local config file in your project directory:
+```bash
+# Create git-reporter.yaml in current directory
+touch git-reporter.yaml
+```
+
+Local config files (`git-reporter.yaml`, `git-reporter.yml`) take priority over global config.
+
 ### 2. Add Your Repositories
 
+**For local repositories:**
 ```bash
 git-reporter add-repo \
   --name my-project \
   --path ~/projects/my-project \
+  --email your@email.com
+```
+
+**For remote repositories (will be cloned automatically):**
+```bash
+git-reporter add-repo \
+  --name github-project \
+  --repo https://github.com/username/repo.git \
   --email your@email.com
 ```
 
@@ -77,19 +94,25 @@ git-reporter generate --provider gemini
 
 ## Example Configuration
 
-Edit `~/.git-reporter/config.yaml`:
+Edit `~/.git-reporter/config.yaml` or create `git-reporter.yaml` in your project directory:
 
 ```yaml
 ai_provider: openai
 default_period: weekly
 openai_model: gpt-4o-mini
-repositories:
+repos:
+  # Local repository
   - name: project1
     path: ~/projects/project1
     author_email: me@example.com
-  - name: project2
-    path: ~/projects/project2
+  
+  # Remote repository (auto-cloned)
+  - name: github-project
+    repo: https://github.com/username/repo.git
+    author_email: me@example.com
 ```
+
+**Note:** You can use either `repos` or `repositories` in the config file (both work).
 
 ## Getting API Keys
 
@@ -133,9 +156,9 @@ repositories:
 
 ## Next Steps
 
-- Read the full [README.md](README.md) for detailed documentation
-- Check [CONTRIBUTING.md](CONTRIBUTING.md) to contribute
-- See [example-config.yaml](example-config.yaml) for configuration options
+- Read the full [Documentation](../index.md) for detailed information
+- Check [Contributing Guide](../development/contributing.md) to contribute
+- See [Example Configuration](../reference/example-config.md) for more configuration options
 
 ## Need Help?
 

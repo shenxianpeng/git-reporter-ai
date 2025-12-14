@@ -1,5 +1,7 @@
 """Git repository analyzer."""
 
+import shutil
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -23,17 +25,55 @@ class GitAnalyzer:
             InvalidGitRepositoryError: If the path is not a valid git repository
         """
         self.config = repo_config
-        self.repo_path = Path(repo_config.path).expanduser().resolve()
+        self.is_temporary = False
+        self.temp_dir = None
 
-        if not self.repo_path.exists():
-            raise FileNotFoundError(f"Repository path not found: {self.repo_path}")
+        # Handle remote repositories
+        if repo_config.repo and not repo_config.path:
+            # Clone remote repository to a temporary directory
+            self.temp_dir = tempfile.mkdtemp(prefix=f"git-reporter-{repo_config.name}-")
+            self.repo_path = Path(self.temp_dir)
+            self.is_temporary = True
 
-        try:
-            self.repo = Repo(self.repo_path)
-        except InvalidGitRepositoryError as e:
-            raise InvalidGitRepositoryError(
-                f"Not a valid git repository: {self.repo_path}"
-            ) from e
+            try:
+                print(f"Cloning remote repository: {repo_config.repo}")
+                self.repo = Repo.clone_from(
+                    repo_config.repo, self.repo_path, depth=None
+                )
+            except Exception as e:
+                # Clean up temp directory if clone fails
+                if self.temp_dir and Path(self.temp_dir).exists():
+                    shutil.rmtree(self.temp_dir)
+                raise RuntimeError(
+                    f"Failed to clone repository {repo_config.repo}: {e}"
+                ) from e
+        else:
+            # Handle local repositories
+            self.repo_path = Path(repo_config.path).expanduser().resolve()
+
+            if not self.repo_path.exists():
+                raise FileNotFoundError(f"Repository path not found: {self.repo_path}")
+
+            try:
+                self.repo = Repo(self.repo_path)
+            except InvalidGitRepositoryError as e:
+                raise InvalidGitRepositoryError(
+                    f"Not a valid git repository: {self.repo_path}"
+                ) from e
+
+    def cleanup(self):
+        """Clean up temporary directories if created."""
+        if self.is_temporary and self.temp_dir and Path(self.temp_dir).exists():
+            try:
+                shutil.rmtree(self.temp_dir)
+            except Exception as e:
+                print(
+                    f"Warning: Failed to cleanup temporary directory {self.temp_dir}: {e}"
+                )
+
+    def __del__(self):
+        """Destructor to ensure cleanup."""
+        self.cleanup()
 
     def get_commits(
         self,
@@ -94,7 +134,9 @@ class GitAnalyzer:
                 commits.append(git_commit)
 
         except GitCommandError as e:
-            raise RuntimeError(f"Error reading commits from {self.config.name}: {e}") from e
+            raise RuntimeError(
+                f"Error reading commits from {self.config.name}: {e}"
+            ) from e
 
         # Sort by date descending (newest first)
         commits.sort(key=lambda c: c.date, reverse=True)

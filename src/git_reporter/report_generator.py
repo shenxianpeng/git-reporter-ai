@@ -22,7 +22,10 @@ class ReportGenerator:
         self.config = config_manager.load()
 
     def _get_date_range(
-        self, period: ReportPeriod, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
+        self,
+        period: ReportPeriod,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
     ) -> tuple[datetime, datetime]:
         """Calculate date range for a given period.
 
@@ -63,7 +66,12 @@ class ReportGenerator:
             current_quarter = (now.month - 1) // 3
             quarter_start_month = current_quarter * 3 + 1
             start = now.replace(
-                month=quarter_start_month, day=1, hour=0, minute=0, second=0, microsecond=0
+                month=quarter_start_month,
+                day=1,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
             )
             end = now
 
@@ -98,11 +106,9 @@ class ReportGenerator:
 
         # Collect commits from all configured repositories
         all_commits = []
-        repos_to_analyze = request.repositories or [
-            r.name for r in self.config.repositories
-        ]
+        repos_to_analyze = request.repositories or [r.name for r in self.config.repos]
 
-        for repo_config in self.config.repositories:
+        for repo_config in self.config.repos:
             if repo_config.name not in repos_to_analyze:
                 continue
 
@@ -114,10 +120,15 @@ class ReportGenerator:
                     author_email=repo_config.author_email,
                 )
                 all_commits.extend(commits)
+                # Clean up temporary directories for remote repos
+                analyzer.cleanup()
             except Exception as e:
                 # Log error but continue with other repos
                 import sys
-                print(f"Warning: Error analyzing {repo_config.name}: {e}", file=sys.stderr)
+
+                print(
+                    f"Warning: Error analyzing {repo_config.name}: {e}", file=sys.stderr
+                )
 
         # Sort all commits by date
         all_commits.sort(key=lambda c: c.date, reverse=True)
@@ -133,9 +144,7 @@ class ReportGenerator:
             summary=summary,
         )
 
-    async def _generate_summary(
-        self, commits: list, period: ReportPeriod
-    ) -> str:
+    async def _generate_summary(self, commits: list, period: ReportPeriod) -> str:
         """Generate AI summary of commits.
 
         Args:
