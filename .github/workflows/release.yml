@@ -28,7 +28,7 @@ jobs:
           python-version: '3.12'
 
       - name: Build package
-        run: uv build
+        run: make build
 
       - name: Store the distribution packages
         uses: actions/upload-artifact@v4
